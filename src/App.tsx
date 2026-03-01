@@ -27,9 +27,14 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  Heart
+  Heart,
+  Leaf,
+  Moon,
+  Sun
 } from 'lucide-react';
-import { generateSimulation, UserData } from './services/gemini';
+import Markdown from 'react-markdown';
+import { generateSimulation, UserData, TimelineEvent } from './services/gemini';
+import { TimelineEventForm } from './components/TimelineEventForm';
 import { auth, googleProvider, isFirebaseConfigured } from './services/firebase';
 import { LegalModal } from './components/Legal';
 import { FAQSection } from './components/FAQ';
@@ -53,9 +58,6 @@ export default function App() {
   const [step, setStep] = useState<'input' | 'loading' | 'result'>('input');
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-  const [feedbackData, setFeedbackData] = useState({ name: '', email: '', message: '' });
   const [customScenario, setCustomScenario] = useState('');
   const [legalModal, setLegalModal] = useState<{ isOpen: boolean, type: 'terms' | 'privacy' | 'disclaimer' }>({
     isOpen: false,
@@ -66,7 +68,8 @@ export default function App() {
     profession: '',
     story: '',
     context: '',
-    scenario: ''
+    scenario: '',
+    timelineEvents: []
   });
 
   // Auth Logic
@@ -84,7 +87,7 @@ export default function App() {
         setView('app');
         
         // Check if tutorial should be shown
-        const hasSeenTutorial = localStorage.getItem(`timeshift_tutorial_seen_${user.uid}`);
+        const hasSeenTutorial = localStorage.getItem(`timevora_tutorial_seen_${user.uid}`);
         if (!hasSeenTutorial) {
           setShowTutorial(true);
         }
@@ -145,7 +148,7 @@ export default function App() {
 
   const closeTutorial = () => {
     if (currentUser) {
-      localStorage.setItem(`timeshift_tutorial_seen_${currentUser.uid}`, 'true');
+      localStorage.setItem(`timevora_tutorial_seen_${currentUser.uid}`, 'true');
     }
     setShowTutorial(false);
   };
@@ -190,6 +193,20 @@ export default function App() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleAddEvent = (event: TimelineEvent) => {
+    setFormData(prev => ({
+      ...prev,
+      timelineEvents: [...(prev.timelineEvents || []), event]
+    }));
+  };
+
+  const handleRemoveEvent = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      timelineEvents: (prev.timelineEvents || []).filter(e => e.id !== id)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStep('loading');
@@ -209,38 +226,16 @@ export default function App() {
     }
   };
 
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFeedbackStatus('sending');
-    try {
-      // Send email via our server API
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(feedbackData),
-      });
-
-      setFeedbackStatus('success');
-      setFeedbackData({ name: '', email: '', message: '' });
-      setTimeout(() => {
-        setShowFeedback(false);
-        setFeedbackStatus('idle');
-      }, 2000);
-    } catch (err) {
-      console.error('Feedback Error:', err);
-      setFeedbackStatus('error');
-    }
-  };
-
   const reset = () => {
     setStep('input');
     setResult(null);
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0502] text-[#f5f2ed] font-sans selection:bg-[#ff4e00]/30 selection:text-white">
+    <div className="min-h-screen bg-[#0a0502] text-[#f5f2ed] font-sans selection:bg-[#ff4e00]/30 selection:text-white overflow-x-hidden">
       {/* Immersive Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="atmosphere absolute inset-0" />
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#3a1510] rounded-full blur-[120px] opacity-40 animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#ff4e00] rounded-full blur-[150px] opacity-10" />
       </div>
@@ -582,6 +577,12 @@ export default function App() {
                       />
                     </div>
 
+                    <TimelineEventForm 
+                      events={formData.timelineEvents || []}
+                      onAddEvent={handleAddEvent}
+                      onRemoveEvent={handleRemoveEvent}
+                    />
+
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/40 ml-1">
                         <History className="w-3 h-3" /> The "What If" Scenario
@@ -669,60 +670,63 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-12"
                 >
-                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-[2rem] shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                      <History className="w-32 h-32" />
+                  <div className="glass-card p-8 md:p-16 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                      <History className="w-64 h-64" />
                     </div>
 
-                    <div className="prose prose-invert max-w-none space-y-8">
-                      {result.split('\n\n').map((section, idx) => {
-                        if (idx === 0) {
+                    <div className="relative z-10">
+                      <div className="markdown-body">
+                        {result.split('\n\n').map((section, idx) => {
+                          if (idx === 0) {
+                            return (
+                              <h2 key={idx} className="text-4xl md:text-5xl font-serif font-light text-[#ff4e00] mb-12 leading-tight tracking-tight">
+                                {section.replace(/#/g, '').trim()}
+                              </h2>
+                            );
+                          }
+
+                          const isNarrative = section.includes('✨');
+                          const isPositive = section.includes('🌿');
+                          const isRisks = section.includes('🌑');
+                          const isOutlook = section.includes('🌅');
+                          const isPrompt = section.includes('🕯️');
+                          const isDisclaimer = section.includes('MANDATORY DISCLAIMER');
+
                           return (
-                            <h2 key={idx} className="text-3xl md:text-4xl font-serif font-light text-[#ff4e00] mb-8 leading-tight">
-                              {section.replace(/#/g, '')}
-                            </h2>
+                            <div key={idx} className={`
+                              ${isNarrative ? 'bg-white/[0.03] p-8 rounded-3xl border border-white/5 italic font-serif text-xl leading-relaxed text-white/90 mb-12' : ''}
+                              ${isPositive ? 'space-y-4 mb-8' : ''}
+                              ${isRisks ? 'space-y-4 mb-8' : ''}
+                              ${isOutlook ? 'border-l-2 border-[#ff4e00]/30 pl-8 py-4 my-12' : ''}
+                              ${isPrompt ? 'bg-[#ff4e00]/5 p-8 rounded-3xl border border-[#ff4e00]/10 text-center my-12' : ''}
+                              ${isDisclaimer ? 'text-[10px] uppercase tracking-[0.2em] text-white/20 pt-12 border-t border-white/5 mt-12 text-center' : ''}
+                            `}>
+                              {section.split('\n').map((line, lIdx) => {
+                                const cleanLine = line.replace(/^[✨🌿🌑🌅🕯️]\s*/, '').replace(/^\*\s*/, '').replace(/#/g, '').trim();
+                                if (!cleanLine && lIdx > 0) return null;
+
+                                if (line.includes('✨')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff4e00] mb-6"><History className="w-4 h-4" /> The Alternate Echo</div>;
+                                if (line.includes('🌿')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400/80 mb-6"><Leaf className="w-4 h-4" /> Fruits of that Path</div>;
+                                if (line.includes('🌑')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 mb-6"><Moon className="w-4 h-4" /> The Shadows of that Path</div>;
+                                if (line.includes('🌅')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-400/60 mb-6"><Sun className="w-4 h-4" /> The Integration</div>;
+                                if (line.includes('🕯️')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff4e00] mb-6 justify-center"><Sparkles className="w-4 h-4" /> A Moment For You</div>;
+
+                                if (line.startsWith('*') || line.startsWith('-')) {
+                                  return (
+                                    <div key={lIdx} className="flex gap-4 items-start text-white/70 mb-3">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#ff4e00]/30 mt-2.5 shrink-0" />
+                                      <span className="text-base font-light">{cleanLine}</span>
+                                    </div>
+                                  );
+                                }
+
+                                return <p key={lIdx} className="text-base font-light mb-4">{cleanLine}</p>;
+                              })}
+                            </div>
                           );
-                        }
-
-                        const isNarrative = section.includes('🔮');
-                        const isPositive = section.includes('📈');
-                        const isRisks = section.includes('⚠️');
-                        const isOutlook = section.includes('🧭');
-                        const isPrompt = section.includes('💡');
-                        const isDisclaimer = section.includes('MANDATORY DISCLAIMER');
-
-                        return (
-                          <div key={idx} className={`
-                            ${isNarrative ? 'bg-white/5 p-6 rounded-2xl border border-white/5 italic font-serif text-lg leading-relaxed text-white/80' : ''}
-                            ${isPositive ? 'space-y-4' : ''}
-                            ${isRisks ? 'space-y-4' : ''}
-                            ${isOutlook ? 'border-l-2 border-[#ff4e00]/30 pl-6 py-2' : ''}
-                            ${isPrompt ? 'bg-[#ff4e00]/10 p-6 rounded-2xl border border-[#ff4e00]/20 text-center' : ''}
-                            ${isDisclaimer ? 'text-[10px] uppercase tracking-widest text-white/20 pt-8 border-t border-white/5 mt-8' : ''}
-                          `}>
-                            {section.split('\n').map((line, lIdx) => {
-                              const cleanLine = line.replace(/^[🔮📈⚠️🧭💡]\s*/, '').replace(/^\*\s*/, '').replace(/#/g, '');
-                              
-                              if (line.includes('🔮')) return <div key={lIdx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[#ff4e00] mb-4"><History className="w-4 h-4" /> Alternate Timeline</div>;
-                              if (line.includes('📈')) return <div key={lIdx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4"><TrendingUp className="w-4 h-4" /> Positive Outcomes</div>;
-                              if (line.includes('⚠️')) return <div key={lIdx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-amber-400 mb-4"><AlertCircle className="w-4 h-4" /> Realistic Challenges</div>;
-                              if (line.includes('🧭')) return <div key={lIdx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-blue-400 mb-4"><Compass className="w-4 h-4" /> Future Outlook</div>;
-                              if (line.includes('💡')) return <div key={lIdx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[#ff4e00] mb-4 justify-center"><Lightbulb className="w-4 h-4" /> Reflection</div>;
-
-                              if (line.startsWith('*') || line.startsWith('-')) {
-                                return (
-                                  <div key={lIdx} className="flex gap-3 items-start text-white/70">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff4e00]/40 mt-2 shrink-0" />
-                                    <span>{cleanLine}</span>
-                                  </div>
-                                );
-                              }
-
-                              return <p key={lIdx} className="m-0">{cleanLine}</p>;
-                            })}
-                          </div>
-                        );
-                      })}
+                        })}
+                      </div>
                     </div>
                   </div>
 
@@ -745,115 +749,50 @@ export default function App() {
               )}
             </AnimatePresence>
 
-            <footer className="mt-24 pt-12 border-t border-white/5 text-center space-y-6">
-              <p className="text-xs text-white/20 tracking-widest uppercase">
-                Designed for emotional clarity & perspective
-              </p>
-              
-              <div className="flex flex-col items-center gap-4">
-                <button 
-                  onClick={() => {
-                    setTutorialStep(0);
-                    setShowTutorial(true);
-                  }}
-                  className="flex items-center gap-2 text-xs font-medium text-white/40 hover:text-[#ff4e00] transition-colors uppercase tracking-widest"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  How it works
-                </button>
-                <button 
-                  onClick={() => setShowFeedback(true)}
-                  className="flex items-center gap-2 text-xs font-medium text-white/40 hover:text-[#ff4e00] transition-colors uppercase tracking-widest"
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  Feedback & Suggestions
-                </button>
+            <footer className="mt-24 pt-12 border-t border-white/5 text-center space-y-8">
+              <div className="space-y-2">
+                <p className="text-xs text-white/20 tracking-widest uppercase">
+                  Designed for emotional clarity & perspective
+                </p>
+                <div className="flex flex-col items-center gap-4 pt-4">
+                  <button 
+                    onClick={() => {
+                      setTutorialStep(0);
+                      setShowTutorial(true);
+                    }}
+                    className="flex items-center gap-2 text-xs font-medium text-white/40 hover:text-[#ff4e00] transition-colors uppercase tracking-widest"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    How it works
+                  </button>
+                </div>
               </div>
 
-              <div className="flex justify-center gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold">TS</div>
+              <div className="py-8 px-6 bg-white/5 rounded-3xl border border-white/5 max-w-md mx-auto">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">Official Website</p>
+                <a 
+                  href="https://trytimevora.online"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-serif italic text-white hover:text-[#ff4e00] transition-all block mb-6"
+                >
+                  trytimevora.online
+                </a>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">Questions or Suggestions?</p>
+                <a 
+                  href="mailto:contactus@trytimevora.online"
+                  className="flex items-center justify-center gap-3 text-white/80 hover:text-[#ff4e00] transition-all group"
+                >
+                  <Mail className="w-4 h-4 text-[#ff4e00] group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-light tracking-wide">contactus@trytimevora.online</span>
+                </a>
+              </div>
+
+              <div className="flex justify-center gap-6 opacity-20 grayscale">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold">TV</div>
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold">AI</div>
               </div>
             </footer>
-
-            {/* Feedback Modal */}
-            <AnimatePresence>
-              {showFeedback && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-[2rem] p-8 shadow-2xl relative"
-                  >
-                    <button 
-                      onClick={() => setShowFeedback(false)}
-                      className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-
-                    <div className="text-center mb-8">
-                      <div className="w-12 h-12 bg-[#ff4e00]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Mail className="w-6 h-6 text-[#ff4e00]" />
-                      </div>
-                      <h3 className="text-2xl font-serif italic">Contact Us</h3>
-                      <p className="text-white/40 text-sm mt-2">We'd love to hear your thoughts and suggestions.</p>
-                    </div>
-
-                    <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1">Name</label>
-                        <input
-                          required
-                          type="text"
-                          value={feedbackData.name}
-                          onChange={(e) => setFeedbackData({...feedbackData, name: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ff4e00]/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1">Email</label>
-                        <input
-                          required
-                          type="email"
-                          value={feedbackData.email}
-                          onChange={(e) => setFeedbackData({...feedbackData, email: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ff4e00]/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1">Message</label>
-                        <textarea
-                          required
-                          rows={4}
-                          value={feedbackData.message}
-                          onChange={(e) => setFeedbackData({...feedbackData, message: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ff4e00]/50 resize-none"
-                        />
-                      </div>
-
-                      <button
-                        disabled={feedbackStatus === 'sending' || feedbackStatus === 'success'}
-                        type="submit"
-                        className={`w-full py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                          feedbackStatus === 'success' 
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' 
-                            : 'bg-[#ff4e00] hover:bg-[#ff6a26] text-white'
-                        }`}
-                      >
-                        {feedbackStatus === 'sending' ? 'Sending...' : feedbackStatus === 'success' ? 'Sent!' : 'Send Message'}
-                        {feedbackStatus === 'idle' && <ArrowRight className="w-4 h-4" />}
-                      </button>
-                      
-                      {feedbackStatus === 'error' && (
-                        <p className="text-center text-xs text-red-400 mt-2">Something went wrong. Please try again.</p>
-                      )}
-                    </form>
-                  </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
 
             {/* Tutorial Modal */}
             <AnimatePresence>

@@ -5,3 +5,43 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", serif;
 }
+
+@layer base {
+  body {
+    @apply bg-[#0a0502] text-[#f5f2ed] antialiased;
+  }
+}
+
+@layer components {
+  .atmosphere {
+    background: 
+      radial-gradient(circle at 50% 30%, #3a1510 0%, transparent 60%),
+      radial-gradient(circle at 10% 80%, #ff4e00 0%, transparent 50%);
+    filter: blur(80px);
+    opacity: 0.6;
+  }
+
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl;
+  }
+
+  .markdown-body {
+    @apply text-white/80 leading-relaxed space-y-6 font-light;
+  }
+
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    @apply font-serif italic text-white mt-8 mb-4;
+  }
+
+  .markdown-body p {
+    @apply mb-4;
+  }
+
+  .markdown-body ul {
+    @apply list-disc list-inside space-y-2 ml-4;
+  }
+
+  .markdown-body li {
+    @apply text-white/70;
+  }
+}

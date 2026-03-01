@@ -36,7 +36,7 @@ export const FAQSection: React.FC = () => {
             <HelpCircle className="w-6 h-6 text-[#ff4e00]" />
           </div>
           <h2 className="text-4xl font-light text-[#f5f2ed] mb-4">Common Questions</h2>
-          <p className="text-[#f5f2ed]/60">Everything you need to know about the TimeShift experience.</p>
+          <p className="text-[#f5f2ed]/60">Everything you need to know about the Timevora experience.</p>
         </div>
 
         <div className="space-y-4">
