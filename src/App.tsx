@@ -225,9 +225,9 @@ export default function App() {
       const simulation = await generateSimulation(finalData);
       setResult(simulation || 'No simulation generated.');
       setStep('result');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('The timeline shifted unexpectedly. Please try again.');
+      setError(err.message || 'The timeline shifted unexpectedly. Please try again.');
       setStep('input');
     }
   };

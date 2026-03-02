@@ -49,11 +49,8 @@ How can the user take the "essence" of that alternate path and bring it into the
 MANDATORY DISCLAIMER (ALWAYS INCLUDE):
 This is an AI-generated simulation created by Timevora for reflection and entertainment purposes only. It is not a guaranteed prediction of real future events or outcomes.`;
 
-const app = express();
-
 export async function createApp() {
-  const PORT = 3000;
-
+  const app = express();
   app.use(express.json());
 
   // Apex to www redirect (Google-side redirect)
@@ -72,7 +69,8 @@ export async function createApp() {
       const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
-        return res.status(500).json({ error: "API Key not configured on server." });
+        console.error(">>> ERROR: GEMINI_API_KEY is missing in environment variables");
+        return res.status(500).json({ error: "API Key not configured on server. Please check Vercel environment variables." });
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -96,6 +94,7 @@ export async function createApp() {
         Please generate the Timevora reflection based on these details.
       `;
 
+      console.log(">>> Generating simulation with Gemini...");
       const response = await ai.models.generateContent({
         model,
         contents: [{ parts: [{ text: prompt }] }],
@@ -106,9 +105,13 @@ export async function createApp() {
         },
       });
 
+      if (!response.text) {
+        throw new Error("Gemini returned an empty response");
+      }
+
       res.json({ text: response.text });
     } catch (error: any) {
-      console.error("AI Error:", error);
+      console.error(">>> AI Error:", error);
       res.status(500).json({ error: error.message || "Failed to generate simulation" });
     }
   });
@@ -116,19 +119,19 @@ export async function createApp() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");
-    console.log(">>> Attaching Vite middleware...");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-    console.log(">>> Vite middleware attached");
-  } else {
+  } else if (!process.env.VERCEL) {
     app.use(express.static("dist"));
   }
 
   return app;
 }
+
+const app = express();
 
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
   console.log(">>> Initializing local server...");
