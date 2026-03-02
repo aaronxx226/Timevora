@@ -110,7 +110,13 @@ export default function App() {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       console.error('Google Auth Error:', error);
-      setAuthError(error.message || 'Google Sign-In failed.');
+      if (error.code === 'auth/popup-closed-by-user') {
+        setAuthError('The sign-in popup was closed before completion. Please try again and keep the window open.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setAuthError('This domain is not authorized for sign-in. Please add it to your Firebase Console.');
+      } else {
+        setAuthError(error.message || 'Google Sign-In failed.');
+      }
     }
   };
 
