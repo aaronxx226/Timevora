@@ -53,6 +53,11 @@ export async function createApp() {
   const app = express();
   app.use(express.json());
 
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", message: "Timevora API is healthy" });
+  });
+
   // Apex to www redirect (Google-side redirect)
   app.use((req, res, next) => {
     const host = req.get('host');
@@ -64,13 +69,18 @@ export async function createApp() {
 
   // Secure AI Generation Endpoint
   app.post("/api/generate", async (req, res) => {
+    console.log(">>> [API] Received request at /api/generate");
     try {
       const { userData } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
+      if (!userData) {
+        console.error(">>> [API] ERROR: No userData provided");
+        return res.status(400).json({ error: "No user data provided" });
+      }
 
+      const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
-        console.error(">>> ERROR: GEMINI_API_KEY is missing in environment variables");
-        return res.status(500).json({ error: "API Key not configured on server. Please check Vercel environment variables." });
+        console.error(">>> [API] ERROR: GEMINI_API_KEY is missing");
+        return res.status(500).json({ error: "GEMINI_API_KEY is missing. Please add it to Vercel Environment Variables." });
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -94,7 +104,7 @@ export async function createApp() {
         Please generate the Timevora reflection based on these details.
       `;
 
-      console.log(">>> Generating simulation with Gemini...");
+      console.log(">>> Calling Gemini API...");
       const response = await ai.models.generateContent({
         model,
         contents: [{ parts: [{ text: prompt }] }],
@@ -106,13 +116,15 @@ export async function createApp() {
       });
 
       if (!response.text) {
-        throw new Error("Gemini returned an empty response");
+        console.error(">>> ERROR: Gemini returned no text");
+        throw new Error("Gemini returned an empty response. This might be due to safety filters.");
       }
 
+      console.log(">>> Successfully generated simulation");
       res.json({ text: response.text });
     } catch (error: any) {
       console.error(">>> AI Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate simulation" });
+      res.status(500).json({ error: error.message || "An internal server error occurred during generation." });
     }
   });
 
@@ -131,20 +143,12 @@ export async function createApp() {
   return app;
 }
 
-const app = express();
-
+// For local execution
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
-  console.log(">>> Initializing local server...");
   createApp().then(app => {
     const PORT = 3000;
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`>>> Timevora Server started successfully`);
-      console.log(`>>> Listening on http://0.0.0.0:${PORT}`);
+      console.log(`>>> Timevora Server running on http://localhost:${PORT}`);
     });
-  }).catch(err => {
-    console.error(">>> FATAL: Failed to start server:", err);
-    process.exit(1);
   });
 }
-
-export default app;

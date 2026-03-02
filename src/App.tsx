@@ -226,7 +226,7 @@ export default function App() {
       setResult(simulation || 'No simulation generated.');
       setStep('result');
     } catch (err: any) {
-      console.error(err);
+      console.error("Simulation Error:", err);
       setError(err.message || 'The timeline shifted unexpectedly. Please try again.');
       setStep('input');
     }
