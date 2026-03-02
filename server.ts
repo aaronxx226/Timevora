@@ -77,14 +77,15 @@ export async function createApp() {
         return res.status(400).json({ error: "No user data provided" });
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
       if (!apiKey) {
         console.error(">>> [API] ERROR: GEMINI_API_KEY is missing");
         return res.status(500).json({ error: "GEMINI_API_KEY is missing. Please add it to Vercel Environment Variables." });
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const model = "gemini-3-flash-preview";
+      // Using gemini-1.5-flash as it is the most stable for free tier
+      const model = "gemini-1.5-flash";
 
       const eventsString = userData.timelineEvents && userData.timelineEvents.length > 0
         ? userData.timelineEvents.map((e: any) => `[${e.date}] ${e.title}: ${e.description} (Emotions: ${e.emotionalTags.join(', ')})`).join('\n')
