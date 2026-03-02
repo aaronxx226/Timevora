@@ -39,6 +39,7 @@ import { auth, googleProvider, isFirebaseConfigured } from './services/firebase'
 import { LegalModal } from './components/Legal';
 import { FAQSection } from './components/FAQ';
 import { ReviewsSection } from './components/Reviews';
+import { ShareButtons } from './components/ShareButtons';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -737,6 +738,8 @@ export default function App() {
                         })}
                       </div>
                     </div>
+                    
+                    <ShareButtons resultText={result} />
                   </div>
 
                   <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
