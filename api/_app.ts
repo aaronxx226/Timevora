@@ -84,7 +84,7 @@ export async function createApp() {
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const model = "gemini-1.5-flash";
+      const model = "gemini-flash-latest";
 
       const eventsString = userData.timelineEvents && userData.timelineEvents.length > 0
         ? userData.timelineEvents.map((e: any) => `[${e.date}] ${e.title}: ${e.description} (Emotions: ${e.emotionalTags.join(', ')})`).join('\n')
