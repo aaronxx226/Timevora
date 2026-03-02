@@ -687,6 +687,7 @@ export default function App() {
                           }
 
                           const isNarrative = section.includes('✨');
+                          const isEmotional = section.includes('💓');
                           const isPositive = section.includes('🌿');
                           const isRisks = section.includes('🌑');
                           const isOutlook = section.includes('🌅');
@@ -696,6 +697,7 @@ export default function App() {
                           return (
                             <div key={idx} className={`
                               ${isNarrative ? 'bg-white/[0.03] p-8 rounded-3xl border border-white/5 italic font-serif text-xl leading-relaxed text-white/90 mb-12' : ''}
+                              ${isEmotional ? 'bg-[#ff4e00]/5 p-8 rounded-3xl border border-[#ff4e00]/10 mb-12' : ''}
                               ${isPositive ? 'space-y-4 mb-8' : ''}
                               ${isRisks ? 'space-y-4 mb-8' : ''}
                               ${isOutlook ? 'border-l-2 border-[#ff4e00]/30 pl-8 py-4 my-12' : ''}
@@ -703,10 +705,11 @@ export default function App() {
                               ${isDisclaimer ? 'text-[10px] uppercase tracking-[0.2em] text-white/20 pt-12 border-t border-white/5 mt-12 text-center' : ''}
                             `}>
                               {section.split('\n').map((line, lIdx) => {
-                                const cleanLine = line.replace(/^[✨🌿🌑🌅🕯️]\s*/, '').replace(/^\*\s*/, '').replace(/#/g, '').trim();
+                                const cleanLine = line.replace(/^[✨💓🌿🌑🌅🕯️]\s*/, '').replace(/^\*\s*/, '').replace(/#/g, '').trim();
                                 if (!cleanLine && lIdx > 0) return null;
 
                                 if (line.includes('✨')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff4e00] mb-6"><History className="w-4 h-4" /> The Alternate Echo</div>;
+                                if (line.includes('💓')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff4e00] mb-6"><Heart className="w-4 h-4" /> Emotional Resonance</div>;
                                 if (line.includes('🌿')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400/80 mb-6"><Leaf className="w-4 h-4" /> Fruits of that Path</div>;
                                 if (line.includes('🌑')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 mb-6"><Moon className="w-4 h-4" /> The Shadows of that Path</div>;
                                 if (line.includes('🌅')) return <div key={lIdx} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-400/60 mb-6"><Sun className="w-4 h-4" /> The Integration</div>;

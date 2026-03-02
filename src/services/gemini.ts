@@ -31,6 +31,9 @@ Then generate the following sections in order:
 ✨ THE ALTERNATE ECHO (150–250 words)
 Write a vivid, sensory-rich narrative of the alternate path. Describe how life might have felt, the small daily moments, and the major shifts. Focus on the internal experience as much as the external events.
 
+💓 EMOTIONAL RESONANCE METRICS (100–150 words)
+Describe the simulated character's emotional state throughout this period. Highlight key feelings, specific moments of joy, the weight of challenges, and their overall sense of fulfillment or contentment. Use warm, reflective, and deeply human language.
+
 🌿 FRUITS OF THAT PATH (3–5 bullet points)
 What unique strengths or joys might have grown there?
 
