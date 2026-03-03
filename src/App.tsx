@@ -77,7 +77,7 @@ export default function App() {
   React.useEffect(() => {
     if (!isFirebaseConfigured || !auth) return;
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser({
           uid: user.uid,
@@ -93,8 +93,11 @@ export default function App() {
           setShowTutorial(true);
         }
       } else {
-        setCurrentUser(null);
-        setView('landing');
+        setCurrentUser((prev: any) => {
+          if (prev?.isGuest) return prev;
+          setView('landing');
+          return null;
+        });
       }
     });
 
@@ -144,7 +147,23 @@ export default function App() {
     }
   };
 
+  const handleGuestLogin = () => {
+    const guestUser = {
+      uid: `guest-${Math.random().toString(36).substring(2, 11)}`,
+      name: 'Guest Explorer',
+      isGuest: true
+    };
+    setCurrentUser(guestUser);
+    setView('app');
+    setShowTutorial(true);
+  };
+
   const logout = async () => {
+    if (currentUser?.isGuest) {
+      setCurrentUser(null);
+      setView('landing');
+      return;
+    }
     if (!auth) return;
     try {
       await signOut(auth);
@@ -326,6 +345,13 @@ export default function App() {
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button 
+                    onClick={handleGuestLogin}
+                    className="px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all flex items-center justify-center gap-2 group"
+                  >
+                    Try as Guest
+                    <Sparkles className="w-4 h-4 text-[#ff4e00]" />
+                  </button>
+                  <button 
                     onClick={() => { setAuthMode('login'); setView('auth'); }}
                     className="px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all"
                   >
@@ -437,6 +463,15 @@ export default function App() {
                     />
                   </svg>
                   Google
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGuestLogin}
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-4 rounded-2xl transition-all flex items-center justify-center gap-3 mt-4"
+                >
+                  <Sparkles className="w-5 h-5 text-[#ff4e00]" />
+                  Try as Guest
                 </button>
               </form>
 
