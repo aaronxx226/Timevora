@@ -330,6 +330,67 @@ export default function App() {
                     </div>
                   ))}
                 </motion.div>
+                
+                {/* New Content Sections for AdSense/SEO */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-12 py-24 text-left border-t border-white/5"
+                >
+                  <div className="space-y-6">
+                    <h2 className="text-4xl font-serif italic text-[#ff4e00]">The Science of Reflection</h2>
+                    <p className="text-white/60 leading-relaxed font-light">
+                      Reflection is more than just looking back; it's a cognitive process that allows us to integrate our experiences into our identity. Timevora uses Narrative Therapy principles to help you "externalize" your life stories. By seeing an alternate path, you can better appreciate the unique strengths you've developed in your current reality.
+                    </p>
+                    <p className="text-white/60 leading-relaxed font-light">
+                      Studies in positive psychology suggest that "counterfactual thinking"—the ability to imagine different outcomes—can actually lead to increased life satisfaction when approached with compassion rather than regret.
+                    </p>
+                  </div>
+                  <div className="space-y-6">
+                    <h2 className="text-4xl font-serif italic text-[#ff4e00]">Emotional Intelligence</h2>
+                    <p className="text-white/60 leading-relaxed font-light">
+                      Our AI doesn't just calculate probabilities; it's tuned for emotional resonance. We've designed Timevora to avoid "regret spirals" by focusing on the "Shadows" and "Fruits" of every path. Every life choice involves a trade-off, and by visualizing both the gains and the losses of the path not taken, we find peace in the present.
+                    </p>
+                    <ul className="space-y-4 text-sm text-white/40">
+                      <li className="flex items-center gap-3">
+                        <div className="w-1 h-1 rounded-full bg-[#ff4e00]" />
+                        Grounded in Narrative Therapy principles
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <div className="w-1 h-1 rounded-full bg-[#ff4e00]" />
+                        Focused on emotional growth and integration
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <div className="w-1 h-1 rounded-full bg-[#ff4e00]" />
+                        Designed to reduce decision-making anxiety
+                      </li>
+                    </ul>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="py-24 border-t border-white/5"
+                >
+                  <h2 className="text-4xl md:text-6xl font-serif font-light mb-12">How Timevora <span className="italic text-[#ff4e00]">Works</span></h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    {[
+                      { step: "01", title: "Context", desc: "You provide the basic details of your current life and a key decision point." },
+                      { step: "02", title: "Simulation", desc: "Our AI models generate a vivid, sensory-rich narrative of the alternate timeline." },
+                      { step: "03", title: "Analysis", desc: "We break down the emotional resonance, unique joys, and specific challenges of that path." },
+                      { step: "04", title: "Integration", desc: "Finally, we help you bring the essence of that alternate path into your real life today." }
+                    ].map((item, i) => (
+                      <div key={i} className="space-y-4 text-left">
+                        <div className="text-5xl font-serif italic text-white/10">{item.step}</div>
+                        <h3 className="text-xl font-medium text-white/80">{item.title}</h3>
+                        <p className="text-sm text-white/40 leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
 
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
